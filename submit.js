@@ -12,6 +12,9 @@
   const auth = firebase.auth();
   const db = firebase.firestore();
   let submissionsUnsubscribe = null;
+  let latestSubmissionsSnapshot = null;
+  const submissionMessageUnsubscribers = new Map();
+  const submissionMessages = new Map();
   const submissionSelection = new Set();
   const escapeHtml = (value) => String(value ?? "")
     .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
@@ -20,6 +23,24 @@
     if (!submissionSelectionCount || !submissionBatchDelete) return;
     submissionSelectionCount.textContent = `已選取 ${submissionSelection.size} 筆`;
     submissionBatchDelete.disabled = submissionSelection.size === 0;
+  };
+  const safeDate = (value) => {
+    const date = value?.toDate ? value.toDate() : (value ? new Date(value) : null);
+    return date && !Number.isNaN(date.getTime())
+      ? `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
+      : "";
+  };
+  const fieldMarkup = (label, value) => {
+    const text = String(value || "").trim();
+    return text ? `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(text)}</dd></div>` : "";
+  };
+  const conversationMarkup = (doc, data) => {
+    const messages = submissionMessages.get(doc.id) || [];
+    const legacyReply = String(data.han_reply || "").trim();
+    const entries = messages.length ? messages : (legacyReply ? [{ sender_role: "han", text: legacyReply }] : []);
+    return entries.length
+      ? entries.map((message) => `<p class="employee-conversation-line ${message.sender_role === "employee" ? "is-employee" : "is-han"}"><strong>${message.sender_role === "employee" ? "員工" : "HAN"}</strong>${escapeHtml(message.text || "").replaceAll("\n", "<br>")}</p>`).join("")
+      : `<p class="employee-conversation-empty">尚未回復</p>`;
   };
   const renderSubmissions = (snapshot) => {
     const docs = snapshot.docs.sort((a, b) => String(b.data().created_at || "").localeCompare(String(a.data().created_at || "")));
@@ -31,10 +52,7 @@
       const data = doc.data();
       const title = `${data.object_name || "未填對象"}｜${data.subject || "未填事情"}`;
       const reply = String(data.han_reply || "").trim();
-      const date = data.created_at ? new Date(data.created_at) : null;
-      const sentDate = date && !Number.isNaN(date.getTime())
-        ? `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
-        : "";
+      const sentDate = safeDate(data.created_at);
       return `<li class="employee-submission-row ${reply ? "is-replied" : ""}">
         <div class="employee-submission-title-row">
           <input type="checkbox" class="employee-submission-select" data-submission-id="${escapeHtml(doc.id)}" aria-label="選取 ${escapeHtml(title)}"${submissionSelection.has(doc.id) ? " checked" : ""}>
@@ -43,15 +61,20 @@
         <div class="employee-submission-details" hidden>
           <dl class="employee-submission-fields">
             <div class="employee-submission-top-row">
-              <div><dt>對象</dt><dd>${escapeHtml(data.object_name || "—")}</dd></div>
-              <div><dt>聯絡人</dt><dd>${escapeHtml(data.contact_name || "—")}</dd></div>
-              <div><dt>電話</dt><dd>${escapeHtml(data.phone || "—")}</dd></div>
+              ${[ ["對象", data.object_name], ["聯絡人", data.contact_name], ["電話", data.phone] ].map(([label, value]) => {
+                const text = String(value || "").trim();
+                return text ? `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(text)}</dd></div>` : "";
+              }).join("")}
             </div>
-            <div><dt>事情</dt><dd>${escapeHtml(data.subject || "—")}</dd></div>
-            <div><dt>資料位置</dt><dd>${escapeHtml(data.resource_location || "—")}</dd></div>
-            <div><dt>日期</dt><dd>${escapeHtml(sentDate || "—")}</dd></div>
+            ${fieldMarkup("事情", data.subject)}
+            ${fieldMarkup("資料位置", data.resource_location)}
+            ${fieldMarkup("日期", sentDate)}
           </dl>
-          <div class="employee-reply-box"><h3>回復</h3><p>${reply ? escapeHtml(reply).replaceAll("\n", "<br>") : "尚未回覆"}</p></div>
+          <div class="employee-reply-box"><h3>回復</h3><div class="employee-conversation">${conversationMarkup(doc, data)}</div></div>
+          <form class="employee-reply-form" data-submission-id="${escapeHtml(doc.id)}">
+            <label><span>輸入回覆</span><textarea rows="2" maxlength="20000"></textarea></label>
+            <div class="employee-reply-actions"><button class="primary-button" type="submit">送出</button></div>
+          </form>
         </div>
       </li>`;
     }).join("");
@@ -75,7 +98,57 @@
         button.parentElement.classList.toggle("is-expanded", open);
       });
     });
+    submissionList.querySelectorAll(".employee-reply-form").forEach((replyForm) => {
+      replyForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const textarea = replyForm.querySelector("textarea");
+        const button = replyForm.querySelector("button[type=submit]");
+        const text = String(textarea?.value || "").trim();
+        if (!text) return;
+        button.disabled = true;
+        try {
+          const user = auth.currentUser || (await auth.signInAnonymously()).user;
+          await db.collection("public_submissions").doc(replyForm.dataset.submissionId).collection("messages").add({
+            sender_role: "employee",
+            sender_uid: user.uid,
+            text,
+            created_at: new Date().toISOString(),
+          });
+          textarea.value = "";
+          historyStatus.textContent = "已送出";
+        } catch (error) {
+          historyStatus.textContent = `回覆失敗：${error.message}`;
+        } finally {
+          button.disabled = false;
+        }
+      });
+    });
     updateSubmissionBatchActions();
+  };
+  const syncSubmissionMessageListeners = (docs) => {
+    const visibleIds = new Set(docs.map((doc) => doc.id));
+    for (const [id, unsubscribe] of submissionMessageUnsubscribers) {
+      if (!visibleIds.has(id)) {
+        unsubscribe();
+        submissionMessageUnsubscribers.delete(id);
+        submissionMessages.delete(id);
+      }
+    }
+    docs.forEach((doc) => {
+      if (submissionMessageUnsubscribers.has(doc.id)) return;
+      const unsubscribe = db.collection("public_submissions").doc(doc.id).collection("messages")
+        .orderBy("created_at")
+        .onSnapshot((messageSnapshot) => {
+          submissionMessages.set(doc.id, messageSnapshot.docs.map((messageDoc) => messageDoc.data()));
+          if (latestSubmissionsSnapshot) renderSubmissions(latestSubmissionsSnapshot);
+        }, () => {});
+      submissionMessageUnsubscribers.set(doc.id, unsubscribe);
+    });
+  };
+  const stopSubmissionMessageListeners = () => {
+    for (const unsubscribe of submissionMessageUnsubscribers.values()) unsubscribe();
+    submissionMessageUnsubscribers.clear();
+    submissionMessages.clear();
   };
   const deleteSelectedSubmissions = async () => {
     const ids = [...submissionSelection];
@@ -96,9 +169,12 @@
   };
   const watchSubmissions = (user) => {
     submissionsUnsubscribe?.();
+    stopSubmissionMessageListeners();
     submissionsUnsubscribe = db.collection("public_submissions")
       .where("sender_uid", "==", user.uid)
       .onSnapshot((snapshot) => {
+        latestSubmissionsSnapshot = snapshot;
+        syncSubmissionMessageListeners(snapshot.docs);
         renderSubmissions(snapshot);
         historyStatus.textContent = "已同步";
       }, (error) => { historyStatus.textContent = `同步失敗：${error.message}`; });
@@ -133,7 +209,7 @@
         created_at: new Date().toISOString(),
       });
       form.reset();
-      status.textContent = "已送出，負責人會在暫存區看到。";
+      status.textContent = "已送出";
     } catch (error) {
       status.textContent = `送出失敗：${error.message}`;
     } finally { button.disabled = false; }
