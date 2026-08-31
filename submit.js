@@ -43,8 +43,61 @@
     messages.sort((a, b) => String(a.created_at || "").localeCompare(String(b.created_at || "")));
     const entries = messages;
     return entries.length
-      ? `<div class="employee-chat-log">${entries.map((message) => `<p class="employee-chat-message ${message.sender_role === "employee" ? "is-employee" : "is-han"}"><span class="employee-chat-bubble"><strong class="employee-chat-sender">${message.sender_role === "employee" ? "員工" : "HAN"}:</strong>${escapeHtml(message.text || "").replaceAll("\n", "<br>")}</span></p>`).join("")}</div>`
+      ? `<div class="employee-chat-log">${entries.map((message) => {
+        const edit = message.sender_role === "employee" && message.id
+          ? `<button type="button" class="employee-chat-edit" data-message-id="${escapeHtml(message.id)}" data-message-text="${escapeHtml(message.text || "")}">編輯</button>`
+          : "";
+        const edited = message.edited_at ? `<small class="employee-chat-edited">已修改</small>` : "";
+        return `<p class="employee-chat-message ${message.sender_role === "employee" ? "is-employee" : "is-han"}"><span class="employee-chat-bubble"><strong class="employee-chat-sender">${message.sender_role === "employee" ? "員工" : "HAN"}:</strong><span class="employee-chat-text">${escapeHtml(message.text || "").replaceAll("\n", "<br>")}</span>${edit}${edited}</span></p>`;
+      }).join("")}</div>`
       : `<p class="employee-conversation-empty">尚未回復</p>`;
+  };
+  const startEmployeeMessageEdit = (editButton) => {
+    const bubble = editButton.closest(".employee-chat-bubble");
+    const submissionId = editButton.closest(".employee-reply-form")?.dataset.submissionId
+      || editButton.closest(".employee-submission-details")?.querySelector(".employee-reply-form")?.dataset.submissionId;
+    const messageId = editButton.dataset.messageId;
+    if (!bubble || !submissionId || !messageId) return;
+    const editor = document.createElement("span");
+    editor.className = "employee-chat-inline-editor";
+    const textarea = document.createElement("textarea");
+    textarea.rows = 1;
+    textarea.maxLength = 20000;
+    textarea.value = editButton.dataset.messageText || "";
+    const actions = document.createElement("span");
+    actions.className = "employee-chat-edit-actions";
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.className = "text-button";
+    cancel.textContent = "取消";
+    cancel.addEventListener("click", () => {
+      if (latestSubmissionsSnapshot) renderSubmissions(latestSubmissionsSnapshot);
+    });
+    const save = document.createElement("button");
+    save.type = "button";
+    save.className = "primary-button";
+    save.textContent = "儲存";
+    save.addEventListener("click", async () => {
+      const text = textarea.value.trim();
+      if (!text) return;
+      save.disabled = true;
+      try {
+        const user = auth.currentUser || (await auth.signInAnonymously()).user;
+        await db.collection("public_submissions").doc(submissionId).collection("messages").doc(messageId).update({
+          text,
+          edited_at: new Date().toISOString(),
+        });
+        historyStatus.textContent = "已送出";
+        if (latestSubmissionsSnapshot) renderSubmissions(latestSubmissionsSnapshot);
+      } catch (error) {
+        save.disabled = false;
+        historyStatus.textContent = `修改失敗：${error.message}`;
+      }
+    });
+    actions.append(cancel, save);
+    editor.append(textarea, actions);
+    bubble.replaceChildren(editor);
+    textarea.focus();
   };
   const renderSubmissions = (snapshot) => {
     const docs = snapshot.docs.sort((a, b) => String(b.data().created_at || "").localeCompare(String(a.data().created_at || "")));
@@ -57,7 +110,7 @@
       const title = `${data.object_name || "未填對象"}｜${data.subject || "未填事情"}`;
       const reply = String(data.han_reply || "").trim();
       const sentDate = safeDate(data.created_at);
-      return `<li class="employee-submission-row ${reply ? "is-replied" : ""}">
+      return `<li class="employee-submission-row ${reply ? "is-replied" : ""}" data-submission-id="${escapeHtml(doc.id)}">
         <div class="employee-submission-title-row">
           <input type="checkbox" class="employee-submission-select" data-submission-id="${escapeHtml(doc.id)}" aria-label="選取 ${escapeHtml(title)}"${submissionSelection.has(doc.id) ? " checked" : ""}>
           <button type="button" class="employee-submission-title" aria-expanded="false">${escapeHtml(title)}<span class="employee-submission-status">${reply ? "已回覆" : "待回覆"}</span></button>
@@ -76,8 +129,7 @@
           </dl>
           <div class="employee-reply-box"><h3>回復</h3><div class="employee-conversation">${conversationMarkup(doc, data)}</div></div>
           <form class="employee-reply-form" data-submission-id="${escapeHtml(doc.id)}">
-            <label><span>輸入回覆</span><textarea rows="1" maxlength="20000"></textarea></label>
-            <div class="employee-reply-actions"><button class="primary-button" type="submit">送出</button></div>
+            <label><span>輸入回覆</span><div class="employee-reply-composer"><textarea rows="1" maxlength="20000"></textarea><button class="primary-button" type="submit">送出</button></div></label>
           </form>
         </div>
       </li>`;
@@ -101,6 +153,9 @@
         button.setAttribute("aria-expanded", String(open));
         button.parentElement.classList.toggle("is-expanded", open);
       });
+    });
+    submissionList.querySelectorAll(".employee-chat-edit").forEach((button) => {
+      button.addEventListener("click", () => startEmployeeMessageEdit(button));
     });
     submissionList.querySelectorAll(".employee-reply-form").forEach((replyForm) => {
       replyForm.addEventListener("submit", async (event) => {
@@ -143,7 +198,7 @@
       const unsubscribe = db.collection("public_submissions").doc(doc.id).collection("messages")
         .orderBy("created_at")
         .onSnapshot((messageSnapshot) => {
-          submissionMessages.set(doc.id, messageSnapshot.docs.map((messageDoc) => messageDoc.data()));
+          submissionMessages.set(doc.id, messageSnapshot.docs.map((messageDoc) => ({ id: messageDoc.id, ...messageDoc.data() })));
           if (latestSubmissionsSnapshot) renderSubmissions(latestSubmissionsSnapshot);
         }, () => {});
       submissionMessageUnsubscribers.set(doc.id, unsubscribe);
