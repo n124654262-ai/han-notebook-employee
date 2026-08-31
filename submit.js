@@ -24,12 +24,14 @@
         <button type="button" class="employee-submission-title" aria-expanded="false">${escapeHtml(title)}<span class="employee-submission-status">${reply ? "已回覆" : "待回覆"}</span></button>
         <div class="employee-submission-details" hidden>
           <dl class="employee-submission-fields">
-            <div><dt>客戶／地點</dt><dd>${escapeHtml(data.object_name || "—")}</dd></div>
-            <div><dt>聯絡人</dt><dd>${escapeHtml(data.contact_name || "—")}</dd></div>
-            <div><dt>電話</dt><dd>${escapeHtml(data.phone || "—")}</dd></div>
-            <div><dt>要做什麼</dt><dd>${escapeHtml(data.subject || "—")}</dd></div>
+            <div class="employee-submission-top-row">
+              <div><dt>對象</dt><dd>${escapeHtml(data.object_name || "—")}</dd></div>
+              <div><dt>聯絡人</dt><dd>${escapeHtml(data.contact_name || "—")}</dd></div>
+              <div><dt>電話</dt><dd>${escapeHtml(data.phone || "—")}</dd></div>
+            </div>
+            <div><dt>事情</dt><dd>${escapeHtml(data.subject || "—")}</dd></div>
             <div><dt>需要我做什麼</dt><dd>${escapeHtml(data.requested_action || "—")}</dd></div>
-            <div><dt>相關資料在哪裡</dt><dd>${escapeHtml(data.resource_location || "—")}</dd></div>
+            <div><dt>資料位置</dt><dd>${escapeHtml(data.resource_location || "—")}</dd></div>
             <div><dt>送出時間</dt><dd>${escapeHtml(time || "—")}</dd></div>
           </dl>
           <div class="employee-reply-box"><h3>HAN 回覆</h3><p>${reply ? escapeHtml(reply).replaceAll("\n", "<br>") : "尚未回覆"}</p></div>
