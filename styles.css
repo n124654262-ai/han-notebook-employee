@@ -37,18 +37,18 @@
 .employee-reply-box { margin-top: 10px; padding: 8px 10px; background: #edf6f2; border-left: 3px solid #176b52; }
 .employee-reply-box h3 { margin: 0 0 4px; font-size: .88rem; }
 .employee-reply-box p { margin: 0; white-space: normal; overflow-wrap: anywhere; }
-.employee-chat-log { display: flex; flex-direction: column; gap: 6px; }
+.employee-chat-log { display: flex; flex-direction: column; gap: 6px; max-height: 238px; overflow-y: auto; padding: 2px 4px 2px 0; }
 .employee-chat-message { display: flex; flex-direction: column; max-width: 88%; margin: 0; }
 .employee-chat-message.is-employee { align-self: flex-end; align-items: flex-end; }
 .employee-chat-message.is-han { align-self: flex-start; align-items: flex-start; }
-.employee-chat-sender { margin: 0 8px 2px; color: #60706a; font-size: .72rem; }
+.employee-chat-sender { margin-right: 5px; color: #60706a; font-size: .78rem; }
 .employee-chat-bubble { display: block; padding: 6px 9px; border: 1px solid #d7e3de; border-radius: 12px; color: #17211d; background: #fff; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .88rem; }
 .employee-chat-message.is-employee .employee-chat-bubble { border-color: #b8d8c9; color: #0f503d; background: #dcebe4; }
 .employee-conversation-empty { margin: 0; color: #60706a; font-size: .86rem; }
 .employee-reply-form { margin-top: 8px; }
 .employee-reply-form label { display: block; }
 .employee-reply-form label > span { display: block; margin-bottom: 4px; color: #34413b; font-size: .82rem; font-weight: 650; }
-.employee-reply-form textarea { min-height: 52px; overflow-y: hidden; resize: vertical; }
+.employee-reply-form textarea { height: 38px; min-height: 38px; overflow-y: auto; resize: none; line-height: 1.35; }
 .employee-reply-actions { display: flex; justify-content: flex-end; margin-top: 6px; }
 .employee-reply-actions .primary-button { min-height: 36px; padding: 6px 12px; }
 .employee-batch-actions { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; gap: 12px; min-height: 52px; margin-top: 12px; padding: 8px 14px calc(8px + env(safe-area-inset-bottom)); border-top: 1px solid #d6dfdb; background: rgb(255 255 255 / 97%); }

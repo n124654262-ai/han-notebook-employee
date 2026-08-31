@@ -43,7 +43,7 @@
     messages.sort((a, b) => String(a.created_at || "").localeCompare(String(b.created_at || "")));
     const entries = messages;
     return entries.length
-      ? `<div class="employee-chat-log">${entries.map((message) => `<p class="employee-chat-message ${message.sender_role === "employee" ? "is-employee" : "is-han"}"><span class="employee-chat-sender">${message.sender_role === "employee" ? "員工" : "HAN"}</span><span class="employee-chat-bubble">${escapeHtml(message.text || "").replaceAll("\n", "<br>")}</span></p>`).join("")}</div>`
+      ? `<div class="employee-chat-log">${entries.map((message) => `<p class="employee-chat-message ${message.sender_role === "employee" ? "is-employee" : "is-han"}"><span class="employee-chat-bubble"><strong class="employee-chat-sender">${message.sender_role === "employee" ? "員工" : "HAN"}:</strong>${escapeHtml(message.text || "").replaceAll("\n", "<br>")}</span></p>`).join("")}</div>`
       : `<p class="employee-conversation-empty">尚未回復</p>`;
   };
   const renderSubmissions = (snapshot) => {
@@ -76,7 +76,7 @@
           </dl>
           <div class="employee-reply-box"><h3>回復</h3><div class="employee-conversation">${conversationMarkup(doc, data)}</div></div>
           <form class="employee-reply-form" data-submission-id="${escapeHtml(doc.id)}">
-            <label><span>輸入回覆</span><textarea rows="2" maxlength="20000"></textarea></label>
+            <label><span>輸入回覆</span><textarea rows="1" maxlength="20000"></textarea></label>
             <div class="employee-reply-actions"><button class="primary-button" type="submit">送出</button></div>
           </form>
         </div>
