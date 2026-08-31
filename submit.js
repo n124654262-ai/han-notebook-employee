@@ -4,8 +4,6 @@
   const historyStatus = document.querySelector("#historyStatus");
   const submissionList = document.querySelector("#submissionList");
   const submissionEmpty = document.querySelector("#submissionEmpty");
-  const submissionSelectionCount = document.querySelector("#submissionSelectionCount");
-  const submissionBatchDelete = document.querySelector("#submissionBatchDelete");
   const config = window.HAN_FIREBASE_CONFIG;
   if (!form || !config || !globalThis.firebase) return;
   const app = firebase.apps.length ? firebase.apps[0] : firebase.initializeApp(config);
@@ -15,18 +13,12 @@
   let latestSubmissionsSnapshot = null;
   const submissionMessageUnsubscribers = new Map();
   const submissionMessages = new Map();
-  const submissionSelection = new Set();
   const expandedSubmissionIds = new Set();
   const chatScrollStates = new Map();
   const chatScrollToBottom = new Set();
   const escapeHtml = (value) => String(value ?? "")
     .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
-  const updateSubmissionBatchActions = () => {
-    if (!submissionSelectionCount || !submissionBatchDelete) return;
-    submissionSelectionCount.textContent = `已選取 ${submissionSelection.size} 筆`;
-    submissionBatchDelete.disabled = submissionSelection.size === 0;
-  };
   const safeDate = (value) => {
     const date = value?.toDate ? value.toDate() : (value ? new Date(value) : null);
     return date && !Number.isNaN(date.getTime())
@@ -131,10 +123,6 @@
   const renderSubmissions = (snapshot) => {
     rememberChatScroll();
     const docs = snapshot.docs.sort((a, b) => String(b.data().created_at || "").localeCompare(String(a.data().created_at || "")));
-    const visibleIds = new Set(docs.map((doc) => doc.id));
-    for (const id of [...submissionSelection]) {
-      if (!visibleIds.has(id)) submissionSelection.delete(id);
-    }
     submissionList.innerHTML = docs.map((doc) => {
       const data = doc.data();
       const title = `${data.object_name || "未填對象"}｜${data.subject || "未填事情"}`;
@@ -143,7 +131,6 @@
       const expanded = expandedSubmissionIds.has(doc.id);
       return `<li class="employee-submission-row ${reply ? "is-replied" : ""}" data-submission-id="${escapeHtml(doc.id)}">
         <div class="employee-submission-title-row${expanded ? " is-expanded" : ""}">
-          <input type="checkbox" class="employee-submission-select" data-submission-id="${escapeHtml(doc.id)}" aria-label="選取 ${escapeHtml(title)}"${submissionSelection.has(doc.id) ? " checked" : ""}>
           <button type="button" class="employee-submission-title" aria-expanded="${expanded}">${escapeHtml(title)}<span class="employee-submission-status">${reply ? "已回覆" : "待回覆"}</span></button>
         </div>
         <div class="employee-submission-details"${expanded ? "" : " hidden"}>
@@ -166,15 +153,6 @@
       </li>`;
     }).join("");
     submissionEmpty.hidden = docs.length !== 0;
-    submissionList.querySelectorAll(".employee-submission-select").forEach((checkbox) => {
-      checkbox.addEventListener("click", (event) => event.stopPropagation());
-      checkbox.addEventListener("change", () => {
-        const id = checkbox.dataset.submissionId;
-        if (checkbox.checked) submissionSelection.add(id);
-        else submissionSelection.delete(id);
-        updateSubmissionBatchActions();
-      });
-    });
     submissionList.querySelectorAll(".employee-submission-title").forEach((button) => {
       button.addEventListener("click", () => {
         const details = button.closest(".employee-submission-row")?.querySelector(".employee-submission-details");
@@ -230,7 +208,6 @@
       });
     });
     restoreChatScroll();
-    updateSubmissionBatchActions();
   };
   const syncSubmissionMessageListeners = (docs) => {
     const visibleIds = new Set(docs.map((doc) => doc.id));
@@ -257,23 +234,6 @@
     submissionMessageUnsubscribers.clear();
     submissionMessages.clear();
   };
-  const deleteSelectedSubmissions = async () => {
-    const ids = [...submissionSelection];
-    if (!ids.length) return;
-    if (!window.confirm(`確定刪除選取的 ${ids.length} 筆留言？刪除後無法復原。`)) return;
-    submissionBatchDelete.disabled = true;
-    try {
-      const batch = db.batch();
-      ids.forEach((id) => batch.delete(db.collection("public_submissions").doc(id)));
-      await batch.commit();
-      submissionSelection.clear();
-      historyStatus.textContent = `已刪除 ${ids.length} 筆留言`;
-    } catch (error) {
-      historyStatus.textContent = `刪除失敗：${error.message}`;
-    } finally {
-      updateSubmissionBatchActions();
-    }
-  };
   const watchSubmissions = (user) => {
     submissionsUnsubscribe?.();
     stopSubmissionMessageListeners();
@@ -289,7 +249,6 @@
   auth.onAuthStateChanged((user) => {
     if (user) watchSubmissions(user);
   });
-  submissionBatchDelete?.addEventListener("click", () => void deleteSelectedSubmissions());
   const toggle = document.querySelector("#publicEntryToggle");
   const wrap = document.querySelector("#publicEntryFormWrap");
   toggle?.addEventListener("click", () => {

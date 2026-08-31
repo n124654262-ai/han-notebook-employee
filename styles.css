@@ -20,7 +20,6 @@
 .employee-submission-row { border-bottom: 1px solid #d6dfdb; }
 .employee-submission-title-row { display: flex; align-items: stretch; background: #fff; }
 .employee-submission-title-row.is-expanded { background: #dcebe4; }
-.employee-submission-select { flex: 0 0 auto; width: 19px; height: 19px; margin: 0 0 0 14px; align-self: center; accent-color: var(--green-dark); }
 .employee-submission-title { display: flex; flex: 1; width: 100%; min-width: 0; min-height: 40px; align-items: center; justify-content: space-between; gap: 8px; border: 0; background: #fff; color: #17211d; padding: 8px 10px; text-align: left; font: inherit; cursor: pointer; }
 .employee-submission-title-row.is-expanded .employee-submission-title { color: #0f503d; background: transparent; font-weight: 700; }
 .employee-submission-title:focus-visible { outline: 2px solid #176b52; outline-offset: -2px; }
@@ -57,8 +56,6 @@
 .employee-reply-composer { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 6px; }
 .employee-reply-composer textarea { height: 38px; min-height: 38px; overflow-y: hidden; resize: none; line-height: 1.35; }
 .employee-reply-composer .primary-button { min-height: 38px; padding: 6px 12px; white-space: nowrap; }
-.employee-batch-actions { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; gap: 12px; min-height: 52px; margin-top: 12px; padding: 8px 14px calc(8px + env(safe-area-inset-bottom)); border-top: 1px solid #d6dfdb; background: rgb(255 255 255 / 97%); }
-.employee-batch-actions span { margin-right: auto; color: #60706a; font-size: .85rem; }
 .danger-button { min-height: 38px; padding: 7px 12px; border: 1px solid var(--danger); border-radius: 4px; color: #fff; background: var(--danger); cursor: pointer; }
 .danger-button:disabled { border-color: #c9d1cd; color: #8b948f; background: #eef1ef; cursor: not-allowed; }
 @media (max-width: 520px) {
