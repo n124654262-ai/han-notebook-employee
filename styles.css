@@ -18,8 +18,11 @@
 .employee-history-status, .employee-history-empty { margin: 10px 0; color: #60706a; font-size: .85rem; }
 .employee-submission-list { list-style: none; margin: 0; padding: 0; }
 .employee-submission-row { border-bottom: 1px solid #d6dfdb; }
+.employee-submission-title-row { display: flex; align-items: stretch; background: #fff; }
+.employee-submission-title-row.is-expanded { background: #dcebe4; }
+.employee-submission-select { flex: 0 0 auto; width: 19px; height: 19px; margin: 0 0 0 14px; align-self: center; accent-color: var(--green-dark); }
 .employee-submission-title { display: flex; width: 100%; min-height: 44px; align-items: center; justify-content: space-between; gap: 10px; border: 0; background: #fff; color: #17211d; padding: 10px 14px; text-align: left; font: inherit; cursor: pointer; }
-.employee-submission-title[aria-expanded="true"] { color: #0f503d; background: #dcebe4; font-weight: 700; }
+.employee-submission-title-row.is-expanded .employee-submission-title { color: #0f503d; background: transparent; font-weight: 700; }
 .employee-submission-title:focus-visible { outline: 2px solid #176b52; outline-offset: -2px; }
 .employee-submission-status { flex: 0 0 auto; color: #7b6550; font-size: .78rem; }
 .is-replied .employee-submission-status { color: #176b52; }
@@ -34,6 +37,10 @@
 .employee-reply-box { margin-top: 14px; padding: 12px; background: #edf6f2; border-left: 3px solid #176b52; }
 .employee-reply-box h3 { margin: 0 0 6px; font-size: .92rem; }
 .employee-reply-box p { margin: 0; white-space: normal; overflow-wrap: anywhere; }
+.employee-batch-actions { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; gap: 12px; min-height: 52px; margin-top: 12px; padding: 8px 14px calc(8px + env(safe-area-inset-bottom)); border-top: 1px solid #d6dfdb; background: rgb(255 255 255 / 97%); }
+.employee-batch-actions span { margin-right: auto; color: #60706a; font-size: .85rem; }
+.danger-button { min-height: 38px; padding: 7px 12px; border: 1px solid var(--danger); border-radius: 4px; color: #fff; background: var(--danger); cursor: pointer; }
+.danger-button:disabled { border-color: #c9d1cd; color: #8b948f; background: #eef1ef; cursor: not-allowed; }
 @media (max-width: 520px) {
   .employee-history { padding-inline: 10px; }
   .employee-submission-fields > div:not(.employee-submission-top-row) { grid-template-columns: 88px minmax(0, 1fr); }
