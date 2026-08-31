@@ -12,6 +12,29 @@
   --danger: #9a2f2f;
 }
 
+/* 員工頁：留言紀錄與 HAN 回覆 */
+.employee-history { max-width: 760px; margin: 18px auto 0; padding: 0 14px 28px; }
+.employee-history h2 { margin: 0; padding: 12px 0; font-size: 1rem; font-weight: 600; border-bottom: 1px solid #d6dfdb; }
+.employee-history-status, .employee-history-empty { margin: 10px 0; color: #60706a; font-size: .85rem; }
+.employee-submission-list { list-style: none; margin: 0; padding: 0; }
+.employee-submission-row { border-bottom: 1px solid #d6dfdb; }
+.employee-submission-title { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px; border: 0; background: #fff; color: #173d31; padding: 13px 2px; text-align: left; font: inherit; cursor: pointer; }
+.employee-submission-title:focus-visible { outline: 2px solid #176b52; outline-offset: -2px; }
+.employee-submission-status { flex: 0 0 auto; color: #7b6550; font-size: .78rem; }
+.is-replied .employee-submission-status { color: #176b52; }
+.employee-submission-details { padding: 2px 0 16px; }
+.employee-submission-fields { margin: 0; }
+.employee-submission-fields > div { display: grid; grid-template-columns: 110px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px solid #edf1ef; }
+.employee-submission-fields dt { color: #60706a; }
+.employee-submission-fields dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.employee-reply-box { margin-top: 14px; padding: 12px; background: #edf6f2; border-left: 3px solid #176b52; }
+.employee-reply-box h3 { margin: 0 0 6px; font-size: .92rem; }
+.employee-reply-box p { margin: 0; white-space: normal; overflow-wrap: anywhere; }
+@media (max-width: 520px) {
+  .employee-history { padding-inline: 10px; }
+  .employee-submission-fields > div { grid-template-columns: 92px 1fr; }
+}
+
 * {
   box-sizing: border-box;
 }
