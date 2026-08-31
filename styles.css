@@ -55,7 +55,7 @@
 .employee-reply-form label { display: block; }
 .employee-reply-form label > span { display: block; margin-bottom: 4px; color: #34413b; font-size: .82rem; font-weight: 650; }
 .employee-reply-composer { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 6px; }
-.employee-reply-composer textarea { height: 38px; min-height: 38px; overflow-y: auto; resize: none; line-height: 1.35; }
+.employee-reply-composer textarea { height: 38px; min-height: 38px; overflow-y: hidden; resize: none; line-height: 1.35; }
 .employee-reply-composer .primary-button { min-height: 38px; padding: 6px 12px; white-space: nowrap; }
 .employee-batch-actions { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; gap: 12px; min-height: 52px; margin-top: 12px; padding: 8px 14px calc(8px + env(safe-area-inset-bottom)); border-top: 1px solid #d6dfdb; background: rgb(255 255 255 / 97%); }
 .employee-batch-actions span { margin-right: auto; color: #60706a; font-size: .85rem; }

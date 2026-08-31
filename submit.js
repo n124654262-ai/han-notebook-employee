@@ -16,6 +16,7 @@
   const submissionMessageUnsubscribers = new Map();
   const submissionMessages = new Map();
   const submissionSelection = new Set();
+  const expandedSubmissionIds = new Set();
   const escapeHtml = (value) => String(value ?? "")
     .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
@@ -48,7 +49,10 @@
           ? `<button type="button" class="employee-chat-edit" data-message-id="${escapeHtml(message.id)}" data-message-text="${escapeHtml(message.text || "")}">編輯</button>`
           : "";
         const edited = message.edited_at ? `<small class="employee-chat-edited">已修改</small>` : "";
-        return `<p class="employee-chat-message ${message.sender_role === "employee" ? "is-employee" : "is-han"}"><span class="employee-chat-bubble"><strong class="employee-chat-sender">${message.sender_role === "employee" ? "員工" : "HAN"}:</strong><span class="employee-chat-text">${escapeHtml(message.text || "").replaceAll("\n", "<br>")}</span>${edit}${edited}</span></p>`;
+        const sender = message.sender_role === "employee"
+          ? ""
+          : `<strong class="employee-chat-sender">HAN:</strong>`;
+        return `<p class="employee-chat-message ${message.sender_role === "employee" ? "is-employee" : "is-han"}"><span class="employee-chat-bubble">${sender}<span class="employee-chat-text">${escapeHtml(message.text || "").replaceAll("\n", "<br>")}</span>${edit}${edited}</span></p>`;
       }).join("")}</div>`
       : `<p class="employee-conversation-empty">尚未回復</p>`;
   };
@@ -110,12 +114,13 @@
       const title = `${data.object_name || "未填對象"}｜${data.subject || "未填事情"}`;
       const reply = String(data.han_reply || "").trim();
       const sentDate = safeDate(data.created_at);
+      const expanded = expandedSubmissionIds.has(doc.id);
       return `<li class="employee-submission-row ${reply ? "is-replied" : ""}" data-submission-id="${escapeHtml(doc.id)}">
-        <div class="employee-submission-title-row">
+        <div class="employee-submission-title-row${expanded ? " is-expanded" : ""}">
           <input type="checkbox" class="employee-submission-select" data-submission-id="${escapeHtml(doc.id)}" aria-label="選取 ${escapeHtml(title)}"${submissionSelection.has(doc.id) ? " checked" : ""}>
-          <button type="button" class="employee-submission-title" aria-expanded="false">${escapeHtml(title)}<span class="employee-submission-status">${reply ? "已回覆" : "待回覆"}</span></button>
+          <button type="button" class="employee-submission-title" aria-expanded="${expanded}">${escapeHtml(title)}<span class="employee-submission-status">${reply ? "已回覆" : "待回覆"}</span></button>
         </div>
-        <div class="employee-submission-details" hidden>
+        <div class="employee-submission-details"${expanded ? "" : " hidden"}>
           <dl class="employee-submission-fields">
             <div class="employee-submission-top-row">
               ${[ ["對象", data.object_name], ["聯絡人", data.contact_name], ["電話", data.phone] ].map(([label, value]) => {
@@ -129,7 +134,7 @@
           </dl>
           <div class="employee-reply-box"><h3>回復</h3><div class="employee-conversation">${conversationMarkup(doc, data)}</div></div>
           <form class="employee-reply-form" data-submission-id="${escapeHtml(doc.id)}">
-            <label><span>輸入回覆</span><div class="employee-reply-composer"><textarea rows="1" maxlength="20000"></textarea><button class="primary-button" type="submit">送出</button></div></label>
+            <label><div class="employee-reply-composer"><textarea aria-label="輸入回覆" rows="1" maxlength="20000"></textarea><button class="primary-button" type="submit">送出</button></div></label>
           </form>
         </div>
       </li>`;
@@ -149,9 +154,14 @@
         const details = button.closest(".employee-submission-row")?.querySelector(".employee-submission-details");
         if (!details) return;
         const open = details.hidden;
+        const submissionId = button.closest(".employee-submission-row")?.dataset.submissionId;
         details.hidden = !open;
         button.setAttribute("aria-expanded", String(open));
         button.parentElement.classList.toggle("is-expanded", open);
+        if (submissionId) {
+          if (open) expandedSubmissionIds.add(submissionId);
+          else expandedSubmissionIds.delete(submissionId);
+        }
       });
     });
     submissionList.querySelectorAll(".employee-chat-edit").forEach((button) => {
