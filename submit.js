@@ -35,11 +35,15 @@
     return text ? `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(text)}</dd></div>` : "";
   };
   const conversationMarkup = (doc, data) => {
-    const messages = submissionMessages.get(doc.id) || [];
+    const messages = [...(submissionMessages.get(doc.id) || [])];
     const legacyReply = String(data.han_reply || "").trim();
-    const entries = messages.length ? messages : (legacyReply ? [{ sender_role: "han", text: legacyReply }] : []);
+    if (legacyReply && !messages.some((message) => message.sender_role === "han")) {
+      messages.push({ sender_role: "han", text: legacyReply, created_at: data.replied_at || data.created_at });
+    }
+    messages.sort((a, b) => String(a.created_at || "").localeCompare(String(b.created_at || "")));
+    const entries = messages;
     return entries.length
-      ? entries.map((message) => `<p class="employee-conversation-line ${message.sender_role === "employee" ? "is-employee" : "is-han"}"><strong>${message.sender_role === "employee" ? "員工" : "HAN"}</strong>${escapeHtml(message.text || "").replaceAll("\n", "<br>")}</p>`).join("")
+      ? `<div class="employee-chat-log">${entries.map((message) => `<p class="employee-chat-message ${message.sender_role === "employee" ? "is-employee" : "is-han"}"><span class="employee-chat-sender">${message.sender_role === "employee" ? "員工" : "HAN"}</span><span class="employee-chat-bubble">${escapeHtml(message.text || "").replaceAll("\n", "<br>")}</span></p>`).join("")}</div>`
       : `<p class="employee-conversation-empty">尚未回復</p>`;
   };
   const renderSubmissions = (snapshot) => {
