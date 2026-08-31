@@ -17,6 +17,8 @@
   const submissionMessages = new Map();
   const submissionSelection = new Set();
   const expandedSubmissionIds = new Set();
+  const chatScrollStates = new Map();
+  const chatScrollToBottom = new Set();
   const escapeHtml = (value) => String(value ?? "")
     .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
@@ -34,6 +36,29 @@
   const fieldMarkup = (label, value) => {
     const text = String(value || "").trim();
     return text ? `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(text)}</dd></div>` : "";
+  };
+  const rememberChatScroll = () => {
+    submissionList.querySelectorAll(".employee-submission-row[data-submission-id]").forEach((row) => {
+      const log = row.querySelector(".employee-chat-log");
+      if (!log) return;
+      const distanceFromBottom = log.scrollHeight - log.scrollTop - log.clientHeight;
+      chatScrollStates.set(row.dataset.submissionId, {
+        scrollTop: log.scrollTop,
+        atBottom: distanceFromBottom < 24,
+      });
+    });
+  };
+  const restoreChatScroll = () => {
+    submissionList.querySelectorAll(".employee-submission-row[data-submission-id]").forEach((row) => {
+      const log = row.querySelector(".employee-chat-log");
+      if (!log) return;
+      const submissionId = row.dataset.submissionId;
+      const previous = chatScrollStates.get(submissionId);
+      const forceBottom = chatScrollToBottom.has(submissionId);
+      if (forceBottom || previous?.atBottom) log.scrollTop = log.scrollHeight;
+      else if (previous) log.scrollTop = Math.min(previous.scrollTop, log.scrollHeight);
+      if (forceBottom) chatScrollToBottom.delete(submissionId);
+    });
   };
   const conversationMarkup = (doc, data) => {
     const messages = [...(submissionMessages.get(doc.id) || [])];
@@ -104,6 +129,7 @@
     textarea.focus();
   };
   const renderSubmissions = (snapshot) => {
+    rememberChatScroll();
     const docs = snapshot.docs.sort((a, b) => String(b.data().created_at || "").localeCompare(String(a.data().created_at || "")));
     const visibleIds = new Set(docs.map((doc) => doc.id));
     for (const id of [...submissionSelection]) {
@@ -162,6 +188,10 @@
           if (open) expandedSubmissionIds.add(submissionId);
           else expandedSubmissionIds.delete(submissionId);
         }
+        if (open) {
+          const log = details.querySelector(".employee-chat-log");
+          if (log) log.scrollTop = log.scrollHeight;
+        }
       });
     });
     submissionList.querySelectorAll(".employee-chat-edit").forEach((button) => {
@@ -174,6 +204,8 @@
         const button = replyForm.querySelector("button[type=submit]");
         const text = String(textarea?.value || "").trim();
         if (!text) return;
+        const submissionId = replyForm.dataset.submissionId;
+        chatScrollToBottom.add(submissionId);
         button.disabled = true;
         try {
           const user = auth.currentUser || (await auth.signInAnonymously()).user;
@@ -185,13 +217,19 @@
           });
           textarea.value = "";
           historyStatus.textContent = "已送出";
+          requestAnimationFrame(() => {
+            const log = submissionList.querySelector(`.employee-submission-row[data-submission-id="${CSS.escape(submissionId)}"] .employee-chat-log`);
+            if (log) log.scrollTop = log.scrollHeight;
+          });
         } catch (error) {
+          chatScrollToBottom.delete(submissionId);
           historyStatus.textContent = `回覆失敗：${error.message}`;
         } finally {
           button.disabled = false;
         }
       });
     });
+    restoreChatScroll();
     updateSubmissionBatchActions();
   };
   const syncSubmissionMessageListeners = (docs) => {
