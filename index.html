@@ -2,7 +2,7 @@
 <html lang="zh-Hant"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#176b52"><title>代辦事項單</title>
-<link rel="stylesheet" href="styles.css?v=employee-history-0831-4">
+<link rel="stylesheet" href="styles.css?v=event-inbox-0831-1">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script><script src="firebase-config.js"></script>
 </head><body><header class="app-header"><h1>代辦事項單</h1></header><main><section class="manual-entry"><form id="submitForm" class="manual-form">
 <label><span>客戶／地點</span><input name="object_name" maxlength="120"></label>
@@ -12,9 +12,9 @@
 <div class="form-actions"><button class="primary-button" type="submit">送出</button></div>
 </form><p id="submitStatus" role="status" aria-live="polite"></p></section>
 <section class="employee-history" aria-labelledby="historyHeading">
-  <h2 id="historyHeading">我的留言</h2>
+  <h2 id="historyHeading">已送出紀錄</h2>
   <p id="historyStatus" class="employee-history-status" role="status" aria-live="polite">同步中…</p>
   <ul id="submissionList" class="employee-submission-list"></ul>
-  <p id="submissionEmpty" class="employee-history-empty" hidden>目前沒有留言。</p>
+  <p id="submissionEmpty" class="employee-history-empty" hidden>目前沒有送出紀錄。</p>
 </section>
-</main><script src="submit.js?v=employee-history-0831-4"></script></body></html>
+</main><script src="submit.js?v=event-inbox-0831-1"></script></body></html>

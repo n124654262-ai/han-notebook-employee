@@ -12,7 +12,7 @@
   --danger: #9a2f2f;
 }
 
-/* 員工頁：留言紀錄與雙向回復 */
+/* 員工頁：只保留已送出的事件紀錄 */
 .employee-history { max-width: 760px; margin: 12px auto 0; padding: 0 10px 22px; }
 .employee-history h2 { margin: 0; padding: 8px 0; font-size: 1rem; font-weight: 600; border-bottom: 1px solid #d6dfdb; }
 .employee-history-status, .employee-history-empty { margin: 7px 0; color: #60706a; font-size: .8rem; }
@@ -23,44 +23,16 @@
 .employee-submission-title { display: flex; flex: 1; width: 100%; min-width: 0; min-height: 40px; align-items: center; justify-content: space-between; gap: 8px; border: 0; background: #fff; color: #17211d; padding: 8px 10px; text-align: left; font: inherit; cursor: pointer; }
 .employee-submission-title-row.is-expanded .employee-submission-title { color: #0f503d; background: transparent; font-weight: 700; }
 .employee-submission-title:focus-visible { outline: 2px solid #176b52; outline-offset: -2px; }
-.employee-submission-status { flex: 0 0 auto; color: #7b6550; font-size: .78rem; }
-.is-replied .employee-submission-status { color: #176b52; }
-.employee-submission-details { padding: 0 10px 10px; border-top: 1px solid #e5ebe8; background: var(--soft); }
+.employee-submission-title-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.employee-submission-status { flex: 0 0 auto; color: #176b52; font-size: .78rem; white-space: nowrap; }
+.employee-submission-details { padding: 0 10px 8px; border-top: 1px solid #e5ebe8; background: var(--soft); }
 .employee-submission-fields { margin: 0; }
 .employee-submission-fields > div { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 6px; padding: 5px 0; border-bottom: 1px solid #dde5e1; }
-.employee-submission-fields > .employee-submission-top-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 4px 0; }
-.employee-submission-top-row > div { display: block; min-width: 0; padding: 0 4px; }
-.employee-submission-top-row dd { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .employee-submission-fields dt { color: #60706a; }
 .employee-submission-fields dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
-.employee-reply-box { margin-top: 10px; padding: 8px 10px; background: #edf6f2; border-left: 3px solid #176b52; }
-.employee-reply-box h3 { margin: 0 0 4px; font-size: .88rem; }
-.employee-reply-box p { margin: 0; white-space: normal; overflow-wrap: anywhere; }
-.employee-chat-log { display: flex; flex-direction: column; gap: 6px; max-height: 238px; overflow-y: auto; padding: 2px 4px 2px 0; }
-.employee-chat-message { display: flex; flex-direction: column; max-width: 88%; margin: 0; }
-.employee-chat-message.is-employee { align-self: flex-end; align-items: flex-end; }
-.employee-chat-message.is-han { align-self: flex-start; align-items: flex-start; }
-.employee-chat-sender { margin-right: 5px; color: #60706a; font-size: .78rem; }
-.employee-chat-bubble { display: block; padding: 6px 9px; border: 1px solid #d7e3de; border-radius: 12px; color: #17211d; background: #fff; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .88rem; }
-.employee-chat-message.is-employee .employee-chat-bubble { border-color: #b8d8c9; color: #0f503d; background: #dcebe4; }
-.employee-chat-text { white-space: pre-wrap; }
-.employee-chat-edit { margin-left: 8px; padding: 0; border: 0; color: var(--green-dark); background: transparent; font-size: .75rem; cursor: pointer; }
-.employee-chat-edited { display: inline-block; margin-left: 7px; color: var(--muted); font-size: .7rem; }
-.employee-chat-inline-editor { display: inline-flex; flex-direction: column; min-width: min(100%, 250px); }
-.employee-chat-inline-editor textarea { min-height: 38px; resize: none; line-height: 1.35; }
-.employee-chat-edit-actions { display: inline-flex; justify-content: flex-end; gap: 6px; margin-top: 4px; }
-.employee-conversation-empty { margin: 0; color: #60706a; font-size: .86rem; }
-.employee-reply-form { margin-top: 8px; }
-.employee-reply-form label { display: block; }
-.employee-reply-form label > span { display: block; margin-bottom: 4px; color: #34413b; font-size: .82rem; font-weight: 650; }
-.employee-reply-composer { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 6px; }
-.employee-reply-composer textarea { height: 38px; min-height: 38px; overflow-y: hidden; resize: none; line-height: 1.35; }
-.employee-reply-composer .primary-button { min-height: 38px; padding: 6px 12px; white-space: nowrap; }
-.danger-button { min-height: 38px; padding: 7px 12px; border: 1px solid var(--danger); border-radius: 4px; color: #fff; background: var(--danger); cursor: pointer; }
-.danger-button:disabled { border-color: #c9d1cd; color: #8b948f; background: #eef1ef; cursor: not-allowed; }
 @media (max-width: 520px) {
   .employee-history { padding-inline: 10px; }
-  .employee-submission-fields > div:not(.employee-submission-top-row) { grid-template-columns: 88px minmax(0, 1fr); }
+  .employee-submission-fields > div { grid-template-columns: 76px minmax(0, 1fr); }
 }
 
 * {
