@@ -67,7 +67,8 @@
     });
     submissionList.querySelectorAll(".employee-submission-title").forEach((button) => {
       button.addEventListener("click", () => {
-        const details = button.nextElementSibling;
+        const details = button.closest(".employee-submission-row")?.querySelector(".employee-submission-details");
+        if (!details) return;
         const open = details.hidden;
         details.hidden = !open;
         button.setAttribute("aria-expanded", String(open));
